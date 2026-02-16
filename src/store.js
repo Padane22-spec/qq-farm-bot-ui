@@ -41,6 +41,9 @@ let globalConfig = {
         start: '23:00',
         end: '07:00',
     },
+    ui: {
+        theme: 'dark', // dark | light
+    },
 };
 
 // 加载全局配置
@@ -53,6 +56,7 @@ function loadGlobalConfig() {
             globalConfig.automation = { ...globalConfig.automation, ...data.automation };
             globalConfig.intervals = { ...globalConfig.intervals, ...data.intervals };
             globalConfig.friendQuietHours = { ...globalConfig.friendQuietHours, ...data.friendQuietHours };
+            globalConfig.ui = { ...globalConfig.ui, ...data.ui };
             if (data.plantingStrategy && ['preferred', 'level'].includes(String(data.plantingStrategy))) {
                 globalConfig.plantingStrategy = String(data.plantingStrategy);
             } else {
@@ -90,6 +94,7 @@ function getConfigSnapshot() {
         preferredSeedId: globalConfig.preferredSeedId,
         intervals: { ...globalConfig.intervals },
         friendQuietHours: { ...globalConfig.friendQuietHours },
+        ui: { ...globalConfig.ui },
     };
 }
 
@@ -131,6 +136,13 @@ function applyConfigSnapshot(snapshot, options = {}) {
             start: normalizeTimeString(cfg.friendQuietHours.start, old.start || '23:00'),
             end: normalizeTimeString(cfg.friendQuietHours.end, old.end || '07:00'),
         };
+    }
+
+    if (cfg.ui && typeof cfg.ui === 'object') {
+        const theme = String(cfg.ui.theme || '').toLowerCase();
+        if (theme === 'dark' || theme === 'light') {
+            globalConfig.ui.theme = theme;
+        }
     }
 
     if (persist) saveGlobalConfig();
@@ -178,12 +190,22 @@ function setFriendQuietHours(cfg) {
     return applyConfigSnapshot({ friendQuietHours: cfg || {} });
 }
 
+function getUI() {
+    return { ...globalConfig.ui };
+}
+
+function setUITheme(theme) {
+    const t = String(theme || '').toLowerCase();
+    const next = (t === 'light') ? 'light' : 'dark';
+    return applyConfigSnapshot({ ui: { theme: next } });
+}
+
 // ============ 账号管理 ============
 function loadAccounts() {
     ensureDataDir();
     try {
         if (fs.existsSync(ACCOUNTS_FILE)) {
-            return JSON.parse(fs.readFileSync(ACCOUNTS_FILE, 'utf8'));
+            return normalizeAccountsData(JSON.parse(fs.readFileSync(ACCOUNTS_FILE, 'utf8')));
         }
     } catch (e) {}
     return { accounts: [], nextId: 1 };
@@ -191,15 +213,26 @@ function loadAccounts() {
 
 function saveAccounts(data) {
     ensureDataDir();
-    fs.writeFileSync(ACCOUNTS_FILE, JSON.stringify(data, null, 2), 'utf8');
+    fs.writeFileSync(ACCOUNTS_FILE, JSON.stringify(normalizeAccountsData(data), null, 2), 'utf8');
 }
 
 function getAccounts() {
     return loadAccounts();
 }
 
+function normalizeAccountsData(raw) {
+    const data = raw && typeof raw === 'object' ? raw : {};
+    const accounts = Array.isArray(data.accounts) ? data.accounts : [];
+    const maxId = accounts.reduce((m, a) => Math.max(m, parseInt(a && a.id, 10) || 0), 0);
+    let nextId = parseInt(data.nextId, 10);
+    if (!Number.isFinite(nextId) || nextId <= 0) nextId = maxId + 1;
+    if (accounts.length === 0) nextId = 1;
+    if (nextId <= maxId) nextId = maxId + 1;
+    return { accounts, nextId };
+}
+
 function addOrUpdateAccount(acc) {
-    const data = loadAccounts();
+    const data = normalizeAccountsData(loadAccounts());
     if (acc.id) {
         const idx = data.accounts.findIndex(a => a.id === acc.id);
         if (idx >= 0) {
@@ -224,8 +257,11 @@ function addOrUpdateAccount(acc) {
 }
 
 function deleteAccount(id) {
-    const data = loadAccounts();
+    const data = normalizeAccountsData(loadAccounts());
     data.accounts = data.accounts.filter(a => a.id !== String(id));
+    if (data.accounts.length === 0) {
+        data.nextId = 1;
+    }
     saveAccounts(data);
     return data;
 }
@@ -244,6 +280,8 @@ module.exports = {
     setIntervals,
     getFriendQuietHours,
     setFriendQuietHours,
+    getUI,
+    setUITheme,
     getAccounts,
     addOrUpdateAccount,
     deleteAccount,

@@ -41,9 +41,6 @@ const OP_NAMES = {
 // 配置: 是否只在有经验时才帮助好友
 const HELP_ONLY_WITH_EXP = true;
 
-// 配置: 是否启用放虫放草功能
-const ENABLE_PUT_BAD_THINGS = false;  // 暂时关闭放虫放草功能
-
 function parseTimeToMinutes(timeStr) {
     const m = String(timeStr || '').match(/^(\d{1,2}):(\d{1,2})$/);
     if (!m) return null;
@@ -262,25 +259,85 @@ async function stealHarvest(friendGid, landIds) {
 }
 
 async function putInsects(friendGid, landIds) {
-    const body = types.PutInsectsRequest.encode(types.PutInsectsRequest.create({
-        land_ids: landIds,
-        host_gid: toLong(friendGid),
-    })).finish();
-    const { body: replyBody } = await sendMsgAsync('gamepb.plantpb.PlantService', 'PutInsects', body);
-    const reply = types.PutInsectsReply.decode(replyBody);
-    updateOperationLimits(reply.operation_limits);
-    return reply;
+    let ok = 0;
+    const ids = Array.isArray(landIds) ? landIds : [];
+    for (const landId of ids) {
+        try {
+            const body = types.PutInsectsRequest.encode(types.PutInsectsRequest.create({
+                land_ids: [toLong(landId)],
+                host_gid: toLong(friendGid),
+            })).finish();
+            const { body: replyBody } = await sendMsgAsync('gamepb.plantpb.PlantService', 'PutInsects', body);
+            const reply = types.PutInsectsReply.decode(replyBody);
+            updateOperationLimits(reply.operation_limits);
+            ok++;
+        } catch (e) { /* ignore single failure */ }
+        await sleep(100);
+    }
+    return ok;
 }
 
 async function putWeeds(friendGid, landIds) {
-    const body = types.PutWeedsRequest.encode(types.PutWeedsRequest.create({
-        land_ids: landIds,
-        host_gid: toLong(friendGid),
-    })).finish();
-    const { body: replyBody } = await sendMsgAsync('gamepb.plantpb.PlantService', 'PutWeeds', body);
-    const reply = types.PutWeedsReply.decode(replyBody);
-    updateOperationLimits(reply.operation_limits);
-    return reply;
+    let ok = 0;
+    const ids = Array.isArray(landIds) ? landIds : [];
+    for (const landId of ids) {
+        try {
+            const body = types.PutWeedsRequest.encode(types.PutWeedsRequest.create({
+                land_ids: [toLong(landId)],
+                host_gid: toLong(friendGid),
+            })).finish();
+            const { body: replyBody } = await sendMsgAsync('gamepb.plantpb.PlantService', 'PutWeeds', body);
+            const reply = types.PutWeedsReply.decode(replyBody);
+            updateOperationLimits(reply.operation_limits);
+            ok++;
+        } catch (e) { /* ignore single failure */ }
+        await sleep(100);
+    }
+    return ok;
+}
+
+async function putInsectsDetailed(friendGid, landIds) {
+    let ok = 0;
+    const failed = [];
+    const ids = Array.isArray(landIds) ? landIds : [];
+    for (const landId of ids) {
+        try {
+            const body = types.PutInsectsRequest.encode(types.PutInsectsRequest.create({
+                land_ids: [toLong(landId)],
+                host_gid: toLong(friendGid),
+            })).finish();
+            const { body: replyBody } = await sendMsgAsync('gamepb.plantpb.PlantService', 'PutInsects', body);
+            const reply = types.PutInsectsReply.decode(replyBody);
+            updateOperationLimits(reply.operation_limits);
+            ok++;
+        } catch (e) {
+            failed.push({ landId, reason: e && e.message ? e.message : '未知错误' });
+        }
+        await sleep(100);
+    }
+    return { ok, failed };
+}
+
+async function putWeedsDetailed(friendGid, landIds) {
+    let ok = 0;
+    const failed = [];
+    const ids = Array.isArray(landIds) ? landIds : [];
+    for (const landId of ids) {
+        try {
+            const body = types.PutWeedsRequest.encode(types.PutWeedsRequest.create({
+                land_ids: [toLong(landId)],
+                host_gid: toLong(friendGid),
+            })).finish();
+            const { body: replyBody } = await sendMsgAsync('gamepb.plantpb.PlantService', 'PutWeeds', body);
+            const reply = types.PutWeedsReply.decode(replyBody);
+            updateOperationLimits(reply.operation_limits);
+            ok++;
+        } catch (e) {
+            failed.push({ landId, reason: e && e.message ? e.message : '未知错误' });
+        }
+        await sleep(100);
+    }
+    return { ok, failed };
 }
 
 async function checkCanOperateRemote(friendGid, operationId) {
@@ -564,21 +621,36 @@ async function doFriendOperation(friendGid, opType) {
         if (opType === 'bad') {
             let bugCount = 0;
             let weedCount = 0;
+            if (!status.canPutBug.length && !status.canPutWeed.length) {
+                return { ok: true, opType, count: 0, bugCount: 0, weedCount: 0, message: '没有可捣乱土地' };
+            }
+
+            // 手动捣乱不依赖预检查，逐块执行（与 terminal-farm-main 保持一致）
+            let failDetails = [];
             if (status.canPutBug.length) {
-                const precheckBug = await checkCanOperateRemote(gid, 10004);
-                if (precheckBug.canOperate) {
-                    bugCount = await runBatchWithFallback(status.canPutBug, (ids) => putInsects(gid, ids), (ids) => putInsects(gid, ids));
-                    if (bugCount > 0) recordOperation('bug', bugCount);
-                }
+                const bugRet = await putInsectsDetailed(gid, status.canPutBug);
+                bugCount = bugRet.ok;
+                failDetails = failDetails.concat((bugRet.failed || []).map(f => `放虫#${f.landId}:${f.reason}`));
+                if (bugCount > 0) recordOperation('bug', bugCount);
             }
             if (status.canPutWeed.length) {
-                const precheckWeed = await checkCanOperateRemote(gid, 10003);
-                if (precheckWeed.canOperate) {
-                    weedCount = await runBatchWithFallback(status.canPutWeed, (ids) => putWeeds(gid, ids), (ids) => putWeeds(gid, ids));
-                    if (weedCount > 0) recordOperation('weed', weedCount);
-                }
+                const weedRet = await putWeedsDetailed(gid, status.canPutWeed);
+                weedCount = weedRet.ok;
+                failDetails = failDetails.concat((weedRet.failed || []).map(f => `放草#${f.landId}:${f.reason}`));
+                if (weedCount > 0) recordOperation('weed', weedCount);
             }
             count = bugCount + weedCount;
+            if (count <= 0) {
+                const reasonPreview = failDetails.slice(0, 2).join(' | ');
+                return {
+                    ok: true,
+                    opType,
+                    count: 0,
+                    bugCount,
+                    weedCount,
+                    message: reasonPreview ? `捣乱失败: ${reasonPreview}` : '捣乱失败或今日次数已用完'
+                };
+            }
             return { ok: true, opType, count, bugCount, weedCount, message: `捣乱完成 虫${bugCount}/草${weedCount}` };
         }
 
@@ -733,27 +805,17 @@ async function visitFriend(friend, totalActions, myGid) {
 
     // 捣乱操作: 放虫(10004)/放草(10003) (受 friend_bad 开关控制)
     const autoBad = isAutomationOn('friend_bad');
-    if (ENABLE_PUT_BAD_THINGS && autoBad && status.canPutBug.length > 0 && canOperate(10004)) {
-        let ok = 0;
+    if (autoBad && status.canPutBug.length > 0 && canOperate(10004)) {
         const remaining = getRemainingTimes(10004);
         const toProcess = status.canPutBug.slice(0, remaining);
-        for (const landId of toProcess) {
-            if (!canOperate(10004)) break;
-            try { await putInsects(gid, [landId]); ok++; } catch (e) { /* ignore */ }
-            await sleep(100);
-        }
+        const ok = await putInsects(gid, toProcess);
         if (ok > 0) { actions.push(`放虫${ok}`); totalActions.putBug += ok; }
     }
 
-    if (ENABLE_PUT_BAD_THINGS && autoBad && status.canPutWeed.length > 0 && canOperate(10003)) {
-        let ok = 0;
+    if (autoBad && status.canPutWeed.length > 0 && canOperate(10003)) {
         const remaining = getRemainingTimes(10003);
         const toProcess = status.canPutWeed.slice(0, remaining);
-        for (const landId of toProcess) {
-            if (!canOperate(10003)) break;
-            try { await putWeeds(gid, [landId]); ok++; } catch (e) { /* ignore */ }
-            await sleep(100);
-        }
+        const ok = await putWeeds(gid, toProcess);
         if (ok > 0) { actions.push(`放草${ok}`); totalActions.putWeed += ok; }
     }
 
@@ -796,6 +858,7 @@ async function checkFriends() {
 
         // 检查是否还有捣乱次数 (放虫/放草)
         const canPutBugOrWeed = canOperate(10004) || canOperate(10003);  // 10004=放虫, 10003=放草
+        const autoBadEnabled = isAutomationOn('friend_bad');
 
         // 分两类：有预览信息的优先访问，其他的放后面（用于放虫放草）
         const priorityFriends = [];  // 有可偷/可帮助的好友
@@ -827,7 +890,7 @@ async function checkFriends() {
                 if (showDebug) {
                     console.log(`[调试] 好友 [${name}] 加入优先列表 (位置: ${priorityFriends.length})`);
                 }
-            } else if (ENABLE_PUT_BAD_THINGS && canPutBugOrWeed) {
+            } else if (autoBadEnabled && canPutBugOrWeed) {
                 // 没有预览信息但可以放虫放草（仅在开启放虫放草功能时）
                 otherFriends.push({ gid, name });
                 visitedGids.add(gid);

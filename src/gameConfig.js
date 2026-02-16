@@ -15,6 +15,9 @@ let plantConfig = null;
 let plantMap = new Map();  // id -> plant
 let seedToPlant = new Map();  // seed_id -> plant
 let fruitToPlant = new Map();  // fruit_id -> plant (果实ID -> 植物)
+let itemInfoConfig = null;
+let itemInfoMap = new Map();  // item_id -> item
+let seedItemMap = new Map();  // seed_id -> item(type=5)
 
 /**
  * 加载配置文件
@@ -59,6 +62,27 @@ function loadConfigs() {
         }
     } catch (e) {
         console.warn('[配置] 加载 Plant.json 失败:', e.message);
+    }
+
+    // 加载物品配置（含种子/果实价格）
+    try {
+        const itemInfoPath = path.join(configDir, 'ItemInfo.json');
+        if (fs.existsSync(itemInfoPath)) {
+            itemInfoConfig = JSON.parse(fs.readFileSync(itemInfoPath, 'utf8'));
+            itemInfoMap.clear();
+            seedItemMap.clear();
+            for (const item of itemInfoConfig) {
+                const id = Number(item && item.id) || 0;
+                if (id <= 0) continue;
+                itemInfoMap.set(id, item);
+                if (Number(item.type) === 5) {
+                    seedItemMap.set(id, item);
+                }
+            }
+            console.log(`[配置] 已加载物品配置 (${itemInfoConfig.length} 项)`);
+        }
+    } catch (e) {
+        console.warn('[配置] 加载 ItemInfo.json 失败:', e.message);
     }
 }
 
@@ -205,9 +229,28 @@ function getAllSeeds() {
     return Array.from(seedToPlant.values()).map(p => ({
         seedId: p.seed_id,
         name: p.name,
-        requiredLevel: p.level || 0,
-        price: 0,
+        requiredLevel: Number(p.land_level_need) || 0,
+        price: getSeedPrice(p.seed_id),
     }));
+}
+
+function getItemById(itemId) {
+    return itemInfoMap.get(Number(itemId) || 0);
+}
+
+function getSeedUnlockLevel(seedId) {
+    const item = seedItemMap.get(Number(seedId) || 0);
+    return item ? (Number(item.level) || 1) : 1;
+}
+
+function getSeedPrice(seedId) {
+    const item = seedItemMap.get(Number(seedId) || 0);
+    return item ? (Number(item.price) || 0) : 0;
+}
+
+function getFruitPrice(fruitId) {
+    const item = itemInfoMap.get(Number(fruitId) || 0);
+    return item ? (Number(item.price) || 0) : 0;
 }
 
 function getAllPlants() {
@@ -236,4 +279,8 @@ module.exports = {
     // 果实配置
     getFruitName,
     getPlantByFruitId,
+    getItemById,
+    getSeedUnlockLevel,
+    getSeedPrice,
+    getFruitPrice,
 };

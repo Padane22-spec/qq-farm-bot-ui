@@ -328,6 +328,33 @@ body.light-theme .land-cell.land-level-4 { background: #d4af37; border-color: #b
 .friend-actions { display: flex; gap: 6px; flex-wrap: wrap; padding: 0 10px 8px; }
 .friend-actions .btn { font-size: 12px; padding: 4px 8px; }
 
+.bag-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 8px;
+}
+.bag-item {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel-2);
+  padding: 10px;
+  display: grid;
+  gap: 4px;
+}
+.bag-item .name {
+  font-weight: 700;
+  font-size: 15px;
+}
+.bag-item .meta {
+  font-size: 12px;
+  color: var(--sub);
+}
+.bag-item .count {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
 .accounts-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(200px,1fr)); gap: 8px; }
 .acc-item { border: 1px solid var(--line); border-radius: 10px; background: var(--panel-2); padding: 10px; }
 .acc-item .name { font-weight: 700; }
@@ -337,6 +364,24 @@ body.light-theme .land-cell.land-level-4 { background: #d4af37; border-color: #b
 .checkbox-inline { display: inline-flex; gap: 8px; align-items: center; }
 .save-btn { width: 100%; }
 .compact-select { width: 140px; }
+
+/* 分析页表格宽度约束，避免移动端撑宽页面 */
+#analytics-list {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+#analytics-list table {
+  width: 100% !important;
+  max-width: 100%;
+  table-layout: fixed;
+}
+#analytics-list th,
+#analytics-list td {
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
 
 /* Settings page readability */
 #page-settings .card-head h3 { font-size: 24px; }
@@ -377,19 +422,37 @@ body.light-theme .land-cell.land-level-4 { background: #d4af37; border-color: #b
 .modal-footer { display: flex; justify-content: flex-end; gap: 6px; margin-top: 8px; }
 
 .tabs { display: flex; gap: 6px; margin-bottom: 8px; }
-.tab-btn { border: 1px solid var(--line); border-radius: 8px; background: var(--panel-2); color: var(--sub); padding: 7px 10px; cursor: pointer; font-size: 14px; }
-.tab-btn.active { background: var(--primary); color: #fff; border-color: transparent; }
-.qr-wrap { min-height: 250px; display: grid; place-items: center; gap: 8px; }
-.qr-display { display: grid; place-items: center; gap: 8px; }
-#qr-code-img { width: 220px; height: 220px; border-radius: 8px; border: 1px solid var(--line); background: #fff; }
+.tab-btn {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  padding: 7px 10px;
+  cursor: pointer;
+  font-size: 14px;
+}
+.tab-btn.active {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+
+#modal-add-acc .tabs {
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+}
+.qr-wrap { min-height: 200px; display: grid; place-items: center; gap: 6px; }
+.qr-display { display: grid; place-items: center; gap: 6px; }
+#qr-code-img { width: 184px; height: 184px; border-radius: 8px; border: 1px solid var(--line); background: #fff; }
 
 /* Add account modal (desktop-first) */
 #modal-add-acc .modal-content {
-  width: min(92vw, 640px);
+  width: min(86vw, 300px);
   max-height: 90vh;
   display: flex;
   flex-direction: column;
-  padding: 12px;
+  padding: 10px;
 }
 #modal-add-acc .modal-body {
   overflow: auto;
@@ -399,15 +462,53 @@ body.light-theme .land-cell.land-level-4 { background: #d4af37; border-color: #b
 #modal-add-acc #tab-qrcode {
   padding-top: 2px;
 }
-#modal-add-acc #tab-qrcode .form-group {
+#modal-add-acc #tab-manual .form-group {
+  margin-bottom: 14px;
+}
+#modal-add-acc #tab-manual .form-group:last-child {
+  margin-bottom: 0;
+}
+#modal-add-acc #tab-manual .form-group label {
+  display: block;
+  text-align: center;
   margin-bottom: 10px;
 }
+#modal-add-acc #tab-manual #acc-name,
+#modal-add-acc #tab-manual #acc-code,
+#modal-add-acc #tab-manual #acc-platform {
+  width: min(100%, 240px);
+  margin: 0 auto;
+  display: block;
+  text-align: center;
+  text-align-last: center;
+}
+#modal-add-acc #tab-manual #acc-name::placeholder,
+#modal-add-acc #tab-manual #acc-code::placeholder {
+  text-align: center;
+}
+#modal-add-acc #tab-qrcode .form-group {
+  margin-bottom: 8px;
+}
+#modal-add-acc #tab-qrcode .form-group label {
+  display: block;
+  text-align: center;
+  margin-bottom: 10px;
+}
+#modal-add-acc #tab-qrcode #acc-name-qr {
+  width: min(100%, 240px);
+  margin: 0 auto;
+  display: block;
+  text-align: center;
+}
+#modal-add-acc #tab-qrcode #acc-name-qr::placeholder {
+  text-align: center;
+}
 #modal-add-acc #qr-container {
-  min-height: 320px;
+  min-height: 236px;
   border: 1px dashed var(--line);
   border-radius: 10px;
   background: var(--panel-2);
-  padding: 12px;
+  padding: 10px;
 }
 #modal-add-acc #qr-code-display {
   width: 100%;
@@ -415,14 +516,15 @@ body.light-theme .land-cell.land-level-4 { background: #d4af37; border-color: #b
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 8px;
 }
 #modal-add-acc #qr-status {
   text-align: center;
-  font-size: 13px;
+  font-size: 12px;
   color: var(--sub);
 }
 #modal-add-acc .modal-footer {
+  justify-content: center;
   margin-top: 10px;
   padding-top: 8px;
   border-top: 1px solid var(--line);
@@ -477,7 +579,7 @@ body.light-theme .land-cell.land-level-4 { background: #d4af37; border-color: #b
   .account-dropdown { max-height: 180px; }
   .nav-list {
     display: grid;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-template-columns: repeat(7, minmax(0, 1fr));
     overflow-x: hidden;
     gap: 4px;
   }
@@ -538,13 +640,16 @@ body.light-theme .land-cell.land-level-4 { background: #d4af37; border-color: #b
   .land-cell { min-height: 82px; }
   .plant-name { font-size: 13px; }
   .phase-name, .land-meta { font-size: 11px; }
+  .bag-list { grid-template-columns: 1fr; }
 
   .accounts-grid { grid-template-columns: 1fr; }
   .settings-grid { grid-template-columns: 1fr; gap: 8px; }
   .compact-select { width: 100%; }
+  #analytics-list table { font-size: 14px !important; }
+  #analytics-list th, #analytics-list td { padding: 8px 6px !important; }
   .modal-content { width: min(96vw, 560px); }
-  #modal-add-acc .modal-content { width: min(96vw, 560px); max-height: 92vh; }
-  #modal-add-acc #qr-container { min-height: 260px; }
+  #modal-add-acc .modal-content { width: min(94vw, 300px); max-height: 92vh; }
+  #modal-add-acc #qr-container { min-height: 214px; }
 
   #page-settings .card-head h3 { font-size: 20px; }
   #page-settings .settings-grid { grid-template-columns: 1fr; gap: 12px; }
@@ -556,7 +661,7 @@ body.light-theme .land-cell.land-level-4 { background: #d4af37; border-color: #b
 
 @media (max-width: 640px) {
   body { padding-left: 8px; padding-right: 8px; }
-  .nav-list { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  .nav-list { grid-template-columns: repeat(7, minmax(0, 1fr)); }
   .nav-item { padding: 6px 4px; }
   .topbar h1 { font-size: 17px; }
   .status-account img,
@@ -576,9 +681,11 @@ body.light-theme .land-cell.land-level-4 { background: #d4af37; border-color: #b
   .actions-group { width: 100%; }
   .actions-group .btn { flex: 1 1 calc(50% - 6px); }
   .switch-item { font-size: 14px; }
+  #analytics-list table { font-size: 13px !important; }
+  #analytics-list th, #analytics-list td { padding: 7px 5px !important; }
   .modal-content { width: 96vw; padding: 8px; }
-  #modal-add-acc .modal-content { width: 96vw; padding: 8px; max-height: 94vh; }
-  #modal-add-acc #qr-container { min-height: 220px; padding: 10px; }
-  #qr-code-img { width: 190px; height: 190px; }
+  #modal-add-acc .modal-content { width: min(96vw, 300px); padding: 8px; max-height: 94vh; }
+  #modal-add-acc #qr-container { min-height: 196px; padding: 8px; }
+  #qr-code-img { width: 172px; height: 172px; }
   .login-card { width: 94vw; padding: 12px; }
 }

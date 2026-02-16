@@ -7,7 +7,7 @@ const { types } = require('./proto');
 const { sendMsgAsync, networkEvents, getUserState } = require('./network');
 const { toLong, toNum, log, logWarn, sleep } = require('./utils');
 const { updateStatusGold } = require('./status');
-const { getFruitName, getPlantByFruitId } = require('./gameConfig');
+const { getFruitName, getPlantByFruitId, getPlantBySeedId, getItemById } = require('./gameConfig');
 const { isAutomationOn } = require('./store');
 
 const SELL_BATCH_SIZE = 15;
@@ -94,6 +94,60 @@ async function getCurrentTotalsFromBag() {
         if (id === 1101) exp = count;     // 累计经验
     }
     return { gold, exp };
+}
+
+async function getBagDetail() {
+    const bagReply = await getBag();
+    const rawItems = getBagItems(bagReply);
+    const items = (rawItems || []).map((it) => {
+        const id = toNum(it.id);
+        const count = toNum(it.count);
+        const uid = it.uid ? toNum(it.uid) : 0;
+        const info = getItemById(id) || null;
+        let name = info && info.name ? String(info.name) : '';
+        let category = 'item';
+        if (id === 1 || id === 1001) {
+            name = '金币';
+            category = 'gold';
+        } else if (id === 1101) {
+            name = '经验';
+            category = 'exp';
+        } else if (getPlantByFruitId(id)) {
+            if (!name) name = `${getFruitName(id)}果实`;
+            category = 'fruit';
+        } else if (getPlantBySeedId(id)) {
+            const p = getPlantBySeedId(id);
+            if (!name) name = `${p && p.name ? p.name : '未知'}种子`;
+            category = 'seed';
+        }
+        if (!name) name = `物品${id}`;
+        const interactionType = info && info.interaction_type ? String(info.interaction_type) : '';
+        let hoursText = '';
+        if (interactionType === 'fertilizerbucket' && count > 0) {
+            // 游戏显示更接近截断到 1 位小数（非四舍五入）
+            const hoursFloor1 = Math.floor((count / 3600) * 10) / 10;
+            hoursText = `${hoursFloor1.toFixed(1)}小时`;
+        }
+        return {
+            id,
+            count,
+            uid,
+            name,
+            category,
+            itemType: info ? (Number(info.type) || 0) : 0,
+            price: info ? (Number(info.price) || 0) : 0,
+            level: info ? (Number(info.level) || 0) : 0,
+            interactionType,
+            hoursText,
+        };
+    });
+    items.sort((a, b) => {
+        const ca = Number(a.count || 0);
+        const cb = Number(b.count || 0);
+        if (cb !== ca) return cb - ca;
+        return Number(a.id || 0) - Number(b.id || 0);
+    });
+    return { totalKinds: items.length, items };
 }
 
 // ============ 出售逻辑 ============
@@ -299,6 +353,7 @@ async function debugSellFruits() {
 
 module.exports = {
     getBag,
+    getBagDetail,
     sellItems,
     sellAllFruits,
     debugSellFruits,

@@ -25,6 +25,7 @@ const logFilters = {
     keyword: localStorage.getItem('logFilterKeyword') || '',
     isWarn: localStorage.getItem('logFilterIsWarn') || '',
 };
+const THEME_STORAGE_KEY = 'themeMode';
 
 const LOG_MODULE_LABELS = {
     farm: '农场',
@@ -38,9 +39,10 @@ const LOG_MODULE_LABELS = {
 
 const LOG_EVENT_LABELS = {
     farm_cycle: '农场巡查',
+    harvest_crop: '收获作物',
     lands_notify: '土地推送',
-    remove_plant: '铲除枯死作物',
-    seed_pick: '选种',
+    remove_plant: '清理枯株',
+    seed_pick: '选择种子',
     seed_buy: '购买种子',
     seed_buy_skip: '种子购买跳过',
     plant_seed: '种植种子',
@@ -308,6 +310,32 @@ function toSafeNumber(value, fallback = 0) {
     return Number.isFinite(num) ? num : fallback;
 }
 
+function applyTheme(mode) {
+    const isLight = mode === 'light';
+    document.body.classList.toggle('light-theme', isLight);
+    const btn = $('btn-theme');
+    if (btn) {
+        btn.innerHTML = isLight ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+    }
+}
+
+function initTheme() {
+    const stored = String(localStorage.getItem(THEME_STORAGE_KEY) || '').toLowerCase();
+    const mode = stored === 'light' ? 'light' : 'dark';
+    applyTheme(mode);
+}
+
+async function syncThemeFromServer() {
+    const data = await api('/api/settings');
+    const serverTheme = data && data.ui && (data.ui.theme === 'light' || data.ui.theme === 'dark')
+        ? data.ui.theme
+        : '';
+    if (serverTheme) {
+        localStorage.setItem(THEME_STORAGE_KEY, serverTheme);
+        applyTheme(serverTheme);
+    }
+}
+
 async function api(path, method = 'GET', body = null) {
     const headers = { 'Content-Type': 'application/json' };
     if (adminToken) headers['x-admin-token'] = adminToken;
@@ -409,6 +437,7 @@ function setLoginState(loggedIn) {
         hideLogin();
         startPolling();
         loadAccounts();
+        syncThemeFromServer();
     } else {
         stopPolling();
         currentAccountId = null;
@@ -1066,6 +1095,10 @@ async function loadSettings() {
             $('friend-quiet-start').value = data.friendQuietHours.start || '23:00';
             $('friend-quiet-end').value = data.friendQuietHours.end || '07:00';
         }
+        if (data.ui && (data.ui.theme === 'light' || data.ui.theme === 'dark')) {
+            localStorage.setItem(THEME_STORAGE_KEY, data.ui.theme);
+            applyTheme(data.ui.theme);
+        }
         const enabled = !!$('friend-quiet-enabled').checked;
         $('friend-quiet-start').disabled = !enabled;
         $('friend-quiet-end').disabled = !enabled;
@@ -1079,6 +1112,36 @@ if (friendQuietEnabledEl) {
         $('friend-quiet-start').disabled = !enabled;
         $('friend-quiet-end').disabled = !enabled;
     });
+}
+
+async function loadBag() {
+    const listEl = $('bag-list');
+    const sumEl = $('bag-summary');
+    if (!listEl || !sumEl) return;
+    if (!currentAccountId) {
+        sumEl.textContent = '请选择账号';
+        listEl.innerHTML = '<div style="padding:20px;text-align:center;color:#666">请选择账号后查看背包</div>';
+        return;
+    }
+    sumEl.textContent = '加载中...';
+    listEl.innerHTML = '<div style="padding:20px;text-align:center;color:#888"><i class="fas fa-spinner fa-spin"></i> 加载中...</div>';
+    const data = await api('/api/bag');
+    const items = data && Array.isArray(data.items) ? data.items : [];
+    sumEl.textContent = `共 ${Number(data && data.totalKinds || items.length)} 种物品`;
+    if (!items.length) {
+        listEl.innerHTML = '<div style="padding:20px;text-align:center;color:#666">背包为空</div>';
+        return;
+    }
+    listEl.innerHTML = items.map(it => `
+      <div class="bag-item">
+        <div class="name">${escapeHtml(String(it.name || ('物品' + (it.id || ''))))}</div>
+        <div class="meta">ID: ${Number(it.id || 0)}${it.uid ? ` · UID: ${Number(it.uid)}` : ''}</div>
+        <div class="meta">类型: ${Number(it.itemType || 0)}${Number(it.level || 0) > 0 ? ` · 等级: ${Number(it.level)}` : ''}${Number(it.price || 0) > 0 ? ` · 价格: ${Number(it.price)}` : ''}</div>
+        ${it.hoursText
+            ? `<div class="count" style="color:var(--primary)">${escapeHtml(String(it.hoursText))}</div>`
+            : `<div class="count">x${Number(it.count || 0)}</div>`}
+      </div>
+    `).join('');
 }
 
 // ============ UI 交互 ============
@@ -1097,6 +1160,7 @@ document.querySelectorAll('.nav-item').forEach(item => {
         if (item.dataset.page === 'dashboard') renderOpsList(lastOperationsData);
         
         if (item.dataset.page === 'farm') loadFarm();
+        if (item.dataset.page === 'bag') loadBag();
         if (item.dataset.page === 'friends') loadFriends();
         if (item.dataset.page === 'analytics') loadAnalytics();
         if (item.dataset.page === 'settings') loadSettings();
@@ -1120,17 +1184,38 @@ async function loadAnalytics() {
         container.innerHTML = '<div style="padding:24px;text-align:center;color:#666;font-size:16px">暂无数据</div>';
         return;
     }
+
+    // 前端兜底：始终按当前指标倒序显示
+    const metricMap = {
+        exp: 'expPerHour',
+        fert: 'normalFertilizerExpPerHour',
+        profit: 'profitPerHour',
+        fert_profit: 'normalFertilizerProfitPerHour',
+        level: 'level',
+    };
+    const metric = metricMap[sort];
+    if (metric) {
+        list.sort((a, b) => {
+            const av = Number(a && a[metric]);
+            const bv = Number(b && b[metric]);
+            if (!Number.isFinite(av) && !Number.isFinite(bv)) return 0;
+            if (!Number.isFinite(av)) return 1;
+            if (!Number.isFinite(bv)) return -1;
+            return bv - av;
+        });
+    }
     
     // 表格头
     let html = `
     <table style="width:100%;border-collapse:collapse;font-size:16px;color:var(--text-main)">
         <thead>
             <tr style="border-bottom:1px solid var(--border);text-align:left;color:var(--text-sub)">
-                <th style="padding:12px 10px">排名</th>
                 <th style="padding:12px 10px">作物 (Lv)</th>
                 <th style="padding:12px 10px">时间</th>
                 <th style="padding:12px 10px">经验/时</th>
                 <th style="padding:12px 10px">普通肥经验/时</th>
+                <th style="padding:12px 10px">净利润/时</th>
+                <th style="padding:12px 10px">普通肥净利润/时</th>
             </tr>
         </thead>
         <tbody>
@@ -1142,7 +1227,6 @@ async function loadAnalytics() {
             : String(item.level);
         html += `
             <tr style="border-bottom:1px solid var(--border);">
-                <td style="padding:12px 10px">#${index + 1}</td>
                 <td style="padding:12px 10px">
                     <div>${item.name}</div>
                     <div style="font-size:13px;color:var(--text-sub)">Lv${lvText}</div>
@@ -1150,6 +1234,8 @@ async function loadAnalytics() {
                 <td style="padding:12px 10px">${item.growTimeStr}</td>
                 <td style="padding:12px 10px;font-weight:bold;color:var(--accent)">${item.expPerHour}</td>
                 <td style="padding:12px 10px;font-weight:bold;color:var(--primary)">${item.normalFertilizerExpPerHour ?? '-'}</td>
+                <td style="padding:12px 10px;font-weight:bold;color:#f0b84f">${item.profitPerHour ?? '-'}</td>
+                <td style="padding:12px 10px;font-weight:bold;color:#74d39a">${item.normalFertilizerProfitPerHour ?? '-'}</td>
             </tr>
         `;
     });
@@ -1239,13 +1325,16 @@ let qrCheckInterval = null;
 
 // ============ 扫码登录相关函数 ============
 function switchTab(tabName) {
+    // 仅处理添加账号弹窗内的标签页
+    const root = document.getElementById('modal-add-acc');
+    if (!root) return;
+
     // 隐藏所有标签页
-    document.querySelectorAll('.tab-content').forEach(tab => {
+    root.querySelectorAll('.tab-content').forEach(tab => {
         tab.style.display = 'none';
     });
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.style.color = 'var(--text-sub)';
-        btn.style.borderBottom = 'none';
+    root.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
     });
 
     // 显示选中的标签页
@@ -1253,11 +1342,8 @@ function switchTab(tabName) {
     if (tab) tab.style.display = 'block';
 
     // 高亮选中的按钮
-    const btn = document.querySelector(`.tab-btn[data-tab="${tabName}"]`);
-    if (btn) {
-        btn.style.color = 'var(--text-main)';
-        btn.style.borderBottom = '2px solid var(--primary)';
-    }
+    const btn = root.querySelector(`.tab-btn[data-tab="${tabName}"]`);
+    if (btn) btn.classList.add('active');
 
     // 切换底部按钮显示
     const footerManual = $('modal-footer-manual');
@@ -1272,10 +1358,8 @@ function switchTab(tabName) {
         }
     }
 
-    // 切换时清理扫码状态
-    if (tabName === 'qrcode') {
-        generateQRCode();
-    } else {
+    // 切换时仅处理轮询，不自动刷新二维码
+    if (tabName !== 'qrcode') {
         stopQRCheck();
     }
 }
@@ -1426,8 +1510,9 @@ $('btn-add-acc-modal').addEventListener('click', () => {
     $('acc-name-qr').value = '';
     $('acc-platform').value = 'qq';
     currentQRCode = '';
-    switchTab('manual');
+    switchTab('qrcode');
     stopQRCheck();
+    generateQRCode();
     modal.querySelector('h3').textContent = '添加账号';
     modal.classList.add('show');
 });
@@ -1502,7 +1587,8 @@ $('btn-save-acc').addEventListener('click', async () => {
         }
     }
     
-    if (!name) return alert('请输入名称');
+    // 手动新增账号时，备注可留空，后端会自动使用“账号X”
+    if (!name && editingAccountId) return alert('请输入名称');
     if (!code) return alert('请输入Code 或 先扫码');
     
     const payload = { name, code, platform };
@@ -1560,14 +1646,19 @@ setInterval(() => {
 updateTime();
 lockHorizontalSwipeOnMobile();
 updateTopbarAccount(null);
+initTheme();
 
 // 初始化
 $('btn-refresh').addEventListener('click', () => { window.location.reload(); });
 
 $('btn-theme').addEventListener('click', () => {
-    document.body.classList.toggle('light-theme');
-    const isLight = document.body.classList.contains('light-theme');
-    $('btn-theme').innerHTML = isLight ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+    const isLight = !document.body.classList.contains('light-theme');
+    const mode = isLight ? 'light' : 'dark';
+    applyTheme(mode);
+    localStorage.setItem(THEME_STORAGE_KEY, mode);
+    if (isLoggedIn) {
+        api('/api/settings/theme', 'POST', { theme: mode });
+    }
 });
 
 const loginBtn = $('btn-login');

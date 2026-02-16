@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>QQ农场智能助手</title>
-  <link rel="stylesheet" href="style.css?v=2026021570">
+  <link rel="stylesheet" href="style.css?v=2026021602">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -35,6 +35,7 @@
       <nav class="nav-list">
         <a href="#" class="nav-item active" data-page="dashboard"><i class="fas fa-chart-pie"></i><span>概览</span></a>
         <a href="#" class="nav-item" data-page="farm"><i class="fas fa-seedling"></i><span>农场</span></a>
+        <a href="#" class="nav-item" data-page="bag"><i class="fas fa-box-open"></i><span>背包</span></a>
         <a href="#" class="nav-item" data-page="friends"><i class="fas fa-user-friends"></i><span>好友</span></a>
         <a href="#" class="nav-item" data-page="analytics"><i class="fas fa-flask"></i><span>分析</span></a>
         <a href="#" class="nav-item" data-page="accounts"><i class="fas fa-users-cog"></i><span>账号</span></a>
@@ -111,9 +112,10 @@
                   <select id="logs-event-filter" class="form-control log-filter-select">
                     <option value="">事件</option>
                     <option value="farm_cycle">农场巡查</option>
+                    <option value="harvest_crop">收获作物</option>
                     <option value="lands_notify">土地推送</option>
-                    <option value="remove_plant">铲除枯死作物</option>
-                    <option value="seed_pick">选种</option>
+                    <option value="remove_plant">清理枯株</option>
+                    <option value="seed_pick">选择种子</option>
                     <option value="seed_buy">购买种子</option>
                     <option value="plant_seed">种植种子</option>
                     <option value="fertilize">施加化肥</option>
@@ -186,6 +188,16 @@
           </div>
         </div>
 
+        <div id="page-bag" class="page">
+          <div class="card">
+            <div class="card-head">
+              <h3><i class="fas fa-box-open"></i> 背包物品</h3>
+            </div>
+            <div id="bag-summary" class="summary">加载中...</div>
+            <div id="bag-list" class="bag-list"></div>
+          </div>
+        </div>
+
         <div id="page-friends" class="page">
           <div class="card">
             <div class="card-head"><h3><i class="fas fa-users"></i> 好友列表</h3></div>
@@ -197,7 +209,7 @@
           <div class="card">
             <div class="card-head with-actions">
               <h3><i class="fas fa-chart-line"></i> 种植效率排行</h3>
-              <select id="analytics-sort" class="form-control compact-select"><option value="exp">按经验效率</option><option value="fert">按普通肥经验效率</option><option value="level">按等级要求</option></select>
+              <select id="analytics-sort" class="form-control compact-select"><option value="exp">按经验效率</option><option value="fert">按普通肥经验效率</option><option value="profit">按净利润效率</option><option value="fert_profit">按普通肥净利润效率</option><option value="level">按等级要求</option></select>
             </div>
             <div id="analytics-list"></div>
           </div>
@@ -241,16 +253,16 @@
       <div class="modal-header"><h3>添加账号</h3><span class="close-modal">&times;</span></div>
       <div class="modal-body">
         <div class="tabs">
-          <button class="tab-btn active" data-tab="manual" type="button">手动输入</button>
-          <button class="tab-btn" data-tab="qrcode" type="button">扫码登录</button>
+          <button class="tab-btn active" data-tab="qrcode" type="button">扫码登录</button>
+          <button class="tab-btn" data-tab="manual" type="button">手动输入</button>
         </div>
-        <div id="tab-manual" class="tab-content active">
-          <div class="form-group"><label>备注名称</label><input id="acc-name" class="form-control" type="text" placeholder="例如: 大号"></div>
+        <div id="tab-manual" class="tab-content" style="display:none">
+          <div class="form-group"><label>备注名称</label><input id="acc-name" class="form-control" type="text" placeholder="留空默认账号X"></div>
           <div class="form-group"><label>登录 Code</label><input id="acc-code" class="form-control" type="text" placeholder="输入获取到的 Code"></div>
           <div class="form-group"><label>平台</label><select id="acc-platform" class="form-control"><option value="qq">QQ小程序</option><option value="wx">微信小程序</option></select></div>
         </div>
-        <div id="tab-qrcode" class="tab-content" style="display:none">
-          <div class="form-group"><label>备注名称 (可选)</label><input id="acc-name-qr" class="form-control" type="text" placeholder="不填则默认使用QQ号"></div>
+        <div id="tab-qrcode" class="tab-content active">
+          <div class="form-group"><label>备注名称</label><input id="acc-name-qr" class="form-control" type="text" placeholder="不填则默认使用QQ号"></div>
           <div id="qr-container" class="qr-wrap">
             <button id="btn-qr-generate" class="btn btn-primary" type="button">生成二维码</button>
             <div id="qr-code-display" class="qr-display" style="display:none">
@@ -271,6 +283,6 @@
     </div>
   </div>
 
-<script src="app.js?v=2026021559"></script>
+<script src="app.js?v=2026021602"></script>
 </body>
 </html>

@@ -168,6 +168,18 @@ function startAdminServer(dataProvider) {
         }
     });
 
+    // API: 背包物品
+    app.get('/api/bag', async (req, res) => {
+        const id = getAccId(req);
+        if (!id) return res.status(400).json({ ok: false });
+        try {
+            const data = await provider.getBag(id);
+            res.json({ ok: true, data });
+        } catch (e) {
+            res.status(500).json({ ok: false, error: e.message });
+        }
+    });
+
     // API: 手动出售（调试）
     app.post('/api/sell/debug', async (req, res) => {
         const id = getAccId(req);
@@ -269,6 +281,17 @@ function startAdminServer(dataProvider) {
         }
     });
 
+    // API: 设置面板主题
+    app.post('/api/settings/theme', async (req, res) => {
+        try {
+            const theme = String((req.body || {}).theme || '');
+            const data = await provider.setUITheme(theme);
+            res.json({ ok: true, data: data || {} });
+        } catch (e) {
+            res.status(500).json({ ok: false, error: e.message });
+        }
+    });
+
     // API: 获取配置
     app.get('/api/settings', async (req, res) => {
         try {
@@ -277,7 +300,8 @@ function startAdminServer(dataProvider) {
             const strategy = store.getPlantingStrategy();
             const preferredSeed = store.getPreferredSeed();
             const friendQuietHours = store.getFriendQuietHours();
-            res.json({ ok: true, data: { intervals, strategy, preferredSeed, friendQuietHours } });
+            const ui = store.getUI();
+            res.json({ ok: true, data: { intervals, strategy, preferredSeed, friendQuietHours, ui } });
         } catch (e) {
             res.status(500).json({ ok: false, error: e.message });
         }

@@ -14,12 +14,15 @@
   "plantingStrategy": "preferred",
   "preferredSeedId": 20002,
   "intervals": {
-    "farm": 2,
-    "friend": 3
+    "farm": 300,
+    "friend": 1800
   },
   "friendQuietHours": {
     "enabled": true,
     "start": "04:00",
     "end": "13:00"
+  },
+  "ui": {
+    "theme": "dark"
   }
 }

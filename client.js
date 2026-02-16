@@ -318,6 +318,7 @@ const dataProvider = {
     getFriends: (accountId) => callWorkerApi(accountId, 'getFriends'),
     getFriendLands: (accountId, gid) => callWorkerApi(accountId, 'getFriendLands', gid),
     doFriendOp: (accountId, gid, opType) => callWorkerApi(accountId, 'doFriendOp', gid, opType),
+    getBag: (accountId) => callWorkerApi(accountId, 'getBag'),
     getSeeds: (accountId) => callWorkerApi(accountId, 'getSeeds'),
     
     setAutomation: async (accountId, key, value) => {
@@ -357,6 +358,10 @@ const dataProvider = {
         const rev = nextConfigRevision();
         broadcastConfigToWorkers();
         return { friendQuietHours: store.getFriendQuietHours(), configRevision: rev };
+    },
+    setUITheme: async (theme) => {
+        const snapshot = store.setUITheme(theme);
+        return { ui: snapshot.ui || store.getUI() };
     },
     debugSellFruits: (accountId) => callWorkerApi(accountId, 'debugSellFruits'),
 

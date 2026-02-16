@@ -6,7 +6,7 @@ const { loadProto } = require('./proto');
 const { connect, reconnect, cleanup, getWs, getUserState, networkEvents } = require('./network');
 const { checkFarm, startFarmCheckLoop, stopFarmCheckLoop, refreshFarmCheckLoop, getLandsDetail, getAvailableSeeds, runFarmOperation } = require('./farm');
 const { checkFriends, startFriendCheckLoop, stopFriendCheckLoop, refreshFriendCheckLoop, getFriendsList, getFriendLandsDetail, doFriendOperation, getOperationLimits } = require('./friend');
-const { initTaskSystem, cleanupTaskSystem, claimTaskReward } = require('./task');
+const { initTaskSystem, cleanupTaskSystem, checkAndClaimTasks, claimTaskReward } = require('./task');
 const { initStatusBar, cleanupStatusBar, setStatusPlatform, statusData } = require('./status');
 const { getOperations, recordGoldExp, getStats, setInitialValues, resetSessionGains, recordOperation } = require('./stats');
 const { sellAllFruits, debugSellFruits } = require('./warehouse');
@@ -82,6 +82,8 @@ async function runUnifiedTick() {
 
         if (dueFarm) {
             if (auto.farm) await checkFarm();
+            // 任务检查与农场轮询同节拍执行，不再使用任务独立轮询
+            if (auto.task) await checkAndClaimTasks();
             nextFarmRunAt = Date.now() + farmMs;
         }
         if (dueFriend) {
@@ -290,6 +292,9 @@ async function handleApiCall(msg) {
                 break;
             case 'getSeeds':
                 result = await getAvailableSeeds();
+                break;
+            case 'getBag':
+                result = await require('./warehouse').getBagDetail();
                 break;
             case 'setAutomation': {
                 const payload = args && args[0] ? args[0] : {};

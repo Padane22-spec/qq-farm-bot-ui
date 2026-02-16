@@ -762,6 +762,13 @@ async function runFarmOperation(opType) {
         if (status.harvestable.length > 0) {
             try {
                 await harvest(status.harvestable);
+                log('收获', `收获完成 ${status.harvestable.length} 块土地`, {
+                    module: 'farm',
+                    event: 'harvest_crop',
+                    result: 'ok',
+                    count: status.harvestable.length,
+                    landIds: [...status.harvestable],
+                });
                 actions.push(`收获${status.harvestable.length}`);
                 recordOperation('harvest', status.harvestable.length);
                 harvestedLandIds = [...status.harvestable];
@@ -770,7 +777,13 @@ async function runFarmOperation(opType) {
                     landIds: [...status.harvestable],
                     opType,
                 });
-            } catch (e) { logWarn('收获', e.message); }
+            } catch (e) {
+                logWarn('收获', e.message, {
+                    module: 'farm',
+                    event: 'harvest_crop',
+                    result: 'error',
+                });
+            }
         }
     }
 
