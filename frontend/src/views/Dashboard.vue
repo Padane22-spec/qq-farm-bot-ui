@@ -432,58 +432,58 @@ useIntervalFn(updateCountdowns, 1000)
               <span>运行日志</span>
             </h3>
 
-          <div class="flex flex-wrap items-center gap-2 text-sm">
-            <BaseSelect
-              v-model="filter.module"
-              :options="modules"
-              class="w-32"
-              @change="refresh"
-            />
+            <div class="flex flex-wrap items-center gap-2 text-sm">
+              <BaseSelect
+                v-model="filter.module"
+                :options="modules"
+                class="w-32"
+                @change="refresh"
+              />
 
-            <BaseSelect
-              v-model="filter.event"
-              :options="events"
-              class="w-32"
-              @change="refresh"
-            />
+              <BaseSelect
+                v-model="filter.event"
+                :options="events"
+                class="w-32"
+                @change="refresh"
+              />
 
-            <BaseInput
-              v-model="filter.keyword"
-              placeholder="关键词..."
-              class="w-32"
-              clearable
-              @keyup.enter="refresh"
-              @clear="refresh"
-            />
+              <BaseInput
+                v-model="filter.keyword"
+                placeholder="关键词..."
+                class="w-32"
+                clearable
+                @keyup.enter="refresh"
+                @clear="refresh"
+              />
 
-            <BaseCheckbox
-              v-model="filter.isWarn"
-              label="只看异常"
-              @change="refresh"
-            />
+              <BaseCheckbox
+                v-model="filter.isWarn"
+                label="只看异常"
+                @change="refresh"
+              />
 
-            <BaseButton
-              variant="primary"
-              size="sm"
-              @click="refresh"
-            >
-              <div class="i-carbon-search" />
-            </BaseButton>
+              <BaseButton
+                variant="primary"
+                size="sm"
+                @click="refresh"
+              >
+                <div class="i-carbon-search" />
+              </BaseButton>
+            </div>
           </div>
-        </div>
 
-        <div ref="logContainer" class="h-[500px] overflow-y-auto rounded bg-gray-50 p-4 text-sm leading-relaxed font-mono dark:bg-gray-900" @scroll="onLogScroll">
-          <div v-if="!allLogs.length" class="py-8 text-center text-gray-400">
-            暂无日志
-          </div>
-          <div v-for="log in allLogs" :key="log.ts + log.msg" class="mb-1 break-all">
-            <span class="mr-2 select-none text-gray-400">[{{ formatLogTime(log.time) }}]</span>
-            <span class="mr-2 rounded px-1.5 py-0.5 text-xs font-bold" :class="getLogTagClass(log.tag)">{{ log.tag }}</span>
-            <span :class="getLogMsgClass(log.tag)">{{ log.msg }}</span>
+          <div ref="logContainer" class="h-[500px] overflow-y-auto rounded bg-gray-50 p-4 text-sm leading-relaxed font-mono dark:bg-gray-900" @scroll="onLogScroll">
+            <div v-if="!allLogs.length" class="py-8 text-center text-gray-400">
+              暂无日志
+            </div>
+            <div v-for="log in allLogs" :key="log.ts + log.msg" class="mb-1 break-all">
+              <span class="mr-2 select-none text-gray-400">[{{ formatLogTime(log.time) }}]</span>
+              <span class="mr-2 rounded px-1.5 py-0.5 text-xs font-bold" :class="getLogTagClass(log.tag)">{{ log.tag }}</span>
+              <span :class="getLogMsgClass(log.tag)">{{ log.msg }}</span>
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
       <!-- Right Column Stack -->
       <div class="flex flex-col gap-6 lg:w-1/4">

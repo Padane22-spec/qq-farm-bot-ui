@@ -2,14 +2,14 @@
  * 好友农场操作 - 进入/离开/帮忙/偷菜/巡查
  */
 
-const { CONFIG, PlantPhase, PHASE_NAMES } = require('./config');
-const { types } = require('./proto');
-const { sendMsgAsync, getUserState, networkEvents } = require('./network');
-const { toLong, toNum, getServerTimeSec, log, logWarn, sleep } = require('./utils');
+const { CONFIG, PlantPhase, PHASE_NAMES } = require('../config/config');
+const { types } = require('../utils/proto');
+const { sendMsgAsync, getUserState, networkEvents } = require('../utils/network');
+const { toLong, toNum, getServerTimeSec, log, logWarn, sleep } = require('../utils/utils');
 const { getCurrentPhase, setOperationLimitsCallback } = require('./farm');
 const { recordOperation } = require('./stats');
-const { isAutomationOn, getFriendQuietHours } = require('./store');
-const { getPlantName, getPlantById, getSeedImageBySeedId } = require('./gameConfig');
+const { isAutomationOn, getFriendQuietHours } = require('../models/store');
+const { getPlantName, getPlantById, getSeedImageBySeedId } = require('../config/gameConfig');
 const { sellAllFruits } = require('./warehouse');
 
 // ============ 内部状态 ============

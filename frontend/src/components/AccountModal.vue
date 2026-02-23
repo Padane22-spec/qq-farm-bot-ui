@@ -299,7 +299,7 @@ watch(() => props.show, (newVal) => {
             label="平台"
             :options="[
               { label: 'QQ小程序', value: 'qq' },
-              { label: '微信小程序', value: 'wx' }
+              { label: '微信小程序', value: 'wx' },
             ]"
           />
 

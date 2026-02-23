@@ -1,26 +1,26 @@
 /**
  * 子进程 Worker - 负责运行单个账号的挂机逻辑
  */
-const { CONFIG } = require('./config');
-const { loadProto } = require('./proto');
-const { connect, cleanup, getWs, getUserState, networkEvents } = require('./network');
-const { checkFarm, startFarmCheckLoop, stopFarmCheckLoop, refreshFarmCheckLoop, getLandsDetail, getAvailableSeeds, runFarmOperation } = require('./farm');
-const { checkFriends, startFriendCheckLoop, stopFriendCheckLoop, refreshFriendCheckLoop, getFriendsList, getFriendLandsDetail, doFriendOperation, getOperationLimits } = require('./friend');
-const { initTaskSystem, cleanupTaskSystem, checkAndClaimTasks, getTaskClaimDailyState, getTaskDailyStateLikeApp, getGrowthTaskStateLikeApp } = require('./task');
-const { checkAndClaimEmails } = require('./email');
-const { getEmailDailyState } = require('./email');
-const { autoBuyOrganicFertilizer, getFertilizerBuyDailyState, buyFreeGifts, getFreeGiftDailyState } = require('./mall');
-const { performDailyShare, getShareDailyState } = require('./share');
-const { performDailyVipGift, getVipDailyState } = require('./qqvip');
-const { performDailyMonthCardGift, getMonthCardDailyState } = require('./monthcard');
-const { initStatusBar, cleanupStatusBar, setStatusPlatform, statusData } = require('./status');
-const { recordGoldExp, getStats, setInitialValues, resetSessionGains, recordOperation } = require('./stats');
-const { sellAllFruits, getBag, getBagItems, openFertilizerGiftPacksSilently, getFertilizerGiftDailyState } = require('./warehouse');
-const { processInviteCodes } = require('./invite');
-const { setLogHook, log, toNum } = require('./utils');
-const { setRecordGoldExpHook } = require('./status');
-const { getLevelExpProgress } = require('./gameConfig');
-const { getAutomation, getPreferredSeed, getConfigSnapshot, applyConfigSnapshot, addOrUpdateAccount } = require('./store');
+const { CONFIG } = require('../config/config');
+const { loadProto } = require('../utils/proto');
+const { connect, cleanup, getWs, getUserState, networkEvents } = require('../utils/network');
+const { checkFarm, startFarmCheckLoop, stopFarmCheckLoop, refreshFarmCheckLoop, getLandsDetail, getAvailableSeeds, runFarmOperation } = require('../services/farm');
+const { checkFriends, startFriendCheckLoop, stopFriendCheckLoop, refreshFriendCheckLoop, getFriendsList, getFriendLandsDetail, doFriendOperation, getOperationLimits } = require('../services/friend');
+const { initTaskSystem, cleanupTaskSystem, checkAndClaimTasks, getTaskClaimDailyState, getTaskDailyStateLikeApp, getGrowthTaskStateLikeApp } = require('../services/task');
+const { checkAndClaimEmails } = require('../services/email');
+const { getEmailDailyState } = require('../services/email');
+const { autoBuyOrganicFertilizer, getFertilizerBuyDailyState, buyFreeGifts, getFreeGiftDailyState } = require('../services/mall');
+const { performDailyShare, getShareDailyState } = require('../services/share');
+const { performDailyVipGift, getVipDailyState } = require('../services/qqvip');
+const { performDailyMonthCardGift, getMonthCardDailyState } = require('../services/monthcard');
+const { initStatusBar, cleanupStatusBar, setStatusPlatform, statusData } = require('../services/status');
+const { recordGoldExp, getStats, setInitialValues, resetSessionGains, recordOperation } = require('../services/stats');
+const { sellAllFruits, getBag, getBagItems, openFertilizerGiftPacksSilently, getFertilizerGiftDailyState } = require('../services/warehouse');
+const { processInviteCodes } = require('../services/invite');
+const { setLogHook, log, toNum } = require('../utils/utils');
+const { setRecordGoldExpHook } = require('../services/status');
+const { getLevelExpProgress } = require('../config/gameConfig');
+const { getAutomation, getPreferredSeed, getConfigSnapshot, applyConfigSnapshot, addOrUpdateAccount } = require('../models/store');
 
 // 捕获日志发送给主进程
 setLogHook((tag, msg, isWarn, meta) => {
@@ -41,7 +41,7 @@ setLogHook((tag, msg, isWarn, meta) => {
 // 捕获金币经验变化
 setRecordGoldExpHook((gold, exp) => {
     // 更新内部统计
-    const { recordGoldExp } = require('./stats');
+    const { recordGoldExp } = require('../services/stats');
     recordGoldExp(gold, exp);
 
     // 发送给主进程
@@ -500,7 +500,7 @@ async function handleApiCall(msg) {
                 result = await getAvailableSeeds();
                 break;
             case 'getBag':
-                result = await require('./warehouse').getBagDetail();
+                result = await require('../services/warehouse').getBagDetail();
                 break;
             case 'setAutomation': {
                 const payload = args && args[0] ? args[0] : {};
@@ -512,7 +512,7 @@ async function handleApiCall(msg) {
                 result = await runFarmOperation(args[0]); // opType
                 break;
             case 'getAnalytics': {
-                const { getPlantRankings } = require('./analytics');
+                const { getPlantRankings } = require('../services/analytics');
                 result = getPlantRankings(args[0]); // sortBy
                 break;
             }
@@ -609,8 +609,8 @@ function syncStatus() {
         expProgress = getLevelExpProgress(level, exp);
     }
 
-    const limits = require('./friend').getOperationLimits();
-    const fullStats = require('./stats').getStats(statusData, userState, connected, limits);
+    const limits = require('../services/friend').getOperationLimits();
+    const fullStats = require('../services/stats').getStats(statusData, userState, connected, limits);
     const nowMs = Date.now();
     fullStats.nextChecks = {
         farmRemainSec: Math.max(0, Math.ceil((Number(nextFarmRunAt || 0) - nowMs) / 1000)),

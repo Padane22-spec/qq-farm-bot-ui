@@ -2,11 +2,11 @@
  * 任务系统 - 自动领取任务奖励
  */
 
-const { types } = require('./proto');
-const { sendMsgAsync, networkEvents } = require('./network');
+const { types } = require('../utils/proto');
+const { sendMsgAsync, networkEvents } = require('../utils/network');
 const { recordOperation } = require('./stats');
-const { isAutomationOn } = require('./store');
-const { toLong, toNum, log, logWarn, sleep } = require('./utils');
+const { isAutomationOn } = require('../models/store');
+const { toLong, toNum, log, logWarn, sleep } = require('../utils/utils');
 
 let initTimer = null;
 let claimTimer = null;

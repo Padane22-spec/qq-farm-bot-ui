@@ -4,10 +4,10 @@
 
 const WebSocket = require('ws');
 const EventEmitter = require('events');
-const { CONFIG } = require('./config');
+const { CONFIG } = require('../config/config');
 const { types } = require('./proto');
 const { toLong, toNum, syncServerTime, log, logWarn } = require('./utils');
-const { updateStatusFromLogin, updateStatusGold, updateStatusLevel } = require('./status');
+const { updateStatusFromLogin, updateStatusGold, updateStatusLevel } = require('../services/status');
 
 // ============ 事件发射器 (用于推送通知) ============
 const networkEvents = new EventEmitter();

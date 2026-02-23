@@ -4,7 +4,7 @@
 
 const protobuf = require('protobufjs');
 const { log } = require('./utils');
-const { getResourcePath } = require('./runtime-paths');
+const { getResourcePath } = require('../config/runtime-paths');
 
 // Proto 根对象与所有消息类型
 let root = null;

@@ -12,7 +12,7 @@ function getResourcePath(...segments) {
 }
 
 function getAppRootForWritable() {
-    return isPackaged ? path.dirname(process.execPath) : path.join(__dirname, '..');
+    return isPackaged ? path.dirname(process.execPath) : path.join(__dirname, '../..');
 }
 
 function getDataDir() {

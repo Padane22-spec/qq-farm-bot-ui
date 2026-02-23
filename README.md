@@ -226,7 +226,6 @@ proto/                       # Protobuf 协议定义
 frontend/                    # 新版 Web 面板（Vue 3 + Vite）
   src/                       # 前端源代码
   dist/                      # 构建后的静态资源（由 Docker 或构建脚本生成）
-panel/                       # 旧版前端代码（仅用于参考）
 ```
 
 ## 特别感谢

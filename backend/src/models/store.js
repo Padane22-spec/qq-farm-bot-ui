@@ -3,7 +3,7 @@
  */
 
 const fs = require('fs');
-const { getDataFile, ensureDataDir } = require('./runtime-paths');
+const { getDataFile, ensureDataDir } = require('../config/runtime-paths');
 
 const STORE_FILE = getDataFile('store.json');
 const ACCOUNTS_FILE = getDataFile('accounts.json');

@@ -447,7 +447,7 @@ async function handleSaveOffline() {
           <div class="i-carbon-settings-adjust text-4xl text-gray-400 dark:text-gray-500" />
         </div>
         <div class="max-w-xs">
-          <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">
+          <h3 class="text-lg text-gray-900 font-medium dark:text-gray-100">
             需要登录账号
           </h3>
           <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">

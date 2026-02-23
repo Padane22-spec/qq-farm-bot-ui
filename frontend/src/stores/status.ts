@@ -28,7 +28,8 @@ export const useStatusStore = defineStore('status', () => {
   const error = ref('')
 
   async function fetchStatus(accountId: string) {
-    if (!accountId) return
+    if (!accountId)
+      return
     loading.value = true
     try {
       const { data } = await api.get('/api/status', {
@@ -37,23 +38,28 @@ export const useStatusStore = defineStore('status', () => {
       if (data.ok) {
         status.value = data.data
         error.value = ''
-      } else {
+      }
+      else {
         error.value = data.error
       }
-    } catch (e: any) {
+    }
+    catch (e: any) {
       error.value = e.message
-    } finally {
+    }
+    finally {
       loading.value = false
     }
   }
 
   async function fetchLogs(accountId: string, options: any = {}) {
-    if (!accountId && options.accountId !== 'all') return
+    if (!accountId && options.accountId !== 'all')
+      return
     const params: any = { limit: 100, ...options }
     const headers: any = {}
     if (accountId && accountId !== 'all') {
       headers['x-account-id'] = accountId
-    } else {
+    }
+    else {
       params.accountId = 'all'
     }
 
@@ -63,13 +69,15 @@ export const useStatusStore = defineStore('status', () => {
         logs.value = data.data
         error.value = ''
       }
-    } catch (e: any) {
+    }
+    catch (e: any) {
       console.error(e)
     }
   }
 
   async function fetchDailyGifts(accountId: string) {
-    if (!accountId) return
+    if (!accountId)
+      return
     try {
       const { data } = await api.get('/api/daily-gifts', {
         headers: { 'x-account-id': accountId },
@@ -77,7 +85,8 @@ export const useStatusStore = defineStore('status', () => {
       if (data.ok) {
         dailyGifts.value = data.data
       }
-    } catch (e) {
+    }
+    catch (e) {
       console.error('Failed to fetch daily gifts', e)
     }
   }

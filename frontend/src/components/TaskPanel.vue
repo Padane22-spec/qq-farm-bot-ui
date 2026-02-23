@@ -86,7 +86,7 @@ function formatTaskProgress(task: any) {
       >
         <div class="i-carbon-connection-signal-off text-3xl text-gray-400 dark:text-gray-500" />
         <div>
-          <div class="text-sm font-medium text-gray-600 dark:text-gray-300">
+          <div class="text-sm text-gray-600 font-medium dark:text-gray-300">
             账号未登录
           </div>
           <div class="mt-1 text-xs text-gray-400">

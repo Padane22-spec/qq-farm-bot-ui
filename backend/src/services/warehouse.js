@@ -3,12 +3,12 @@
  * 协议说明：BagReply 使用 item_bag（ItemBag），item_bag.items 才是背包物品列表
  */
 
-const { types } = require('./proto');
-const { sendMsgAsync, networkEvents, getUserState } = require('./network');
-const { toLong, toNum, log, logWarn, sleep } = require('./utils');
+const { types } = require('../utils/proto');
+const { sendMsgAsync, networkEvents, getUserState } = require('../utils/network');
+const { toLong, toNum, log, logWarn, sleep } = require('../utils/utils');
 const { updateStatusGold } = require('./status');
-const { getFruitName, getPlantByFruitId, getPlantBySeedId, getItemById, getItemImageById } = require('./gameConfig');
-const { isAutomationOn } = require('./store');
+const { getFruitName, getPlantByFruitId, getPlantBySeedId, getItemById, getItemImageById } = require('../config/gameConfig');
+const { isAutomationOn } = require('../models/store');
 const protobuf = require('protobufjs');
 
 const SELL_BATCH_SIZE = 15;

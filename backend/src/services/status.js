@@ -2,7 +2,7 @@
  * 状态栏 - 在终端固定位置显示用户状态
  */
 
-const { getLevelExpTable, getLevelExpProgress } = require('./gameConfig');
+const { getLevelExpTable, getLevelExpProgress } = require('../config/gameConfig');
 
 // 统计钩子（可选，admin 未加载时为空）
 let recordGoldExpHook = null;

@@ -29,34 +29,33 @@ jobs:
       - name: Install Dependencies
         run: |
           pnpm install
-          pnpm frontend:install
 
       - name: Build
-        run: pnpm build:release
+        run: pnpm package:release
 
       - name: List Artifacts
-        run: ls -R dist
+        run: ls -R backend/dist
 
       - name: Upload Windows
         uses: actions/upload-artifact@v4
         with:
           name: farm-win-x64
-          path: ./dist/farm-win-x64.exe
+          path: ./backend/dist/qq-farm-bot-win-x64.exe
 
       - name: Upload Linux
         uses: actions/upload-artifact@v4
         with:
           name: farm-linux-x64
-          path: ./dist/farm-linux-x64
+          path: ./backend/dist/qq-farm-bot-linux-x64
 
       - name: Upload MacOS Intel
         uses: actions/upload-artifact@v4
         with:
           name: farm-mac-x64
-          path: ./dist/farm-macos-x64
+          path: ./backend/dist/qq-farm-bot-macos-x64
 
       - name: Upload MacOS Apple Silicon
         uses: actions/upload-artifact@v4
         with:
           name: farm-mac-arm64
-          path: ./dist/farm-macos-arm64
+          path: ./backend/dist/qq-farm-bot-macos-arm64

@@ -2,7 +2,7 @@
  * 数据分析模块 - 作物效率分析
  */
 
-const { getAllPlants, getFruitPrice, getSeedPrice, getItemImageById } = require('./gameConfig');
+const { getAllPlants, getFruitPrice, getSeedPrice, getItemImageById } = require('../config/gameConfig');
 
 function parseGrowTime(growPhases) {
     if (!growPhases) return 0;

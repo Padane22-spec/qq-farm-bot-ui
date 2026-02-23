@@ -2,9 +2,9 @@
  * QQ 会员每日礼包
  */
 
-const { types } = require('./proto');
-const { sendMsgAsync } = require('./network');
-const { log, toNum } = require('./utils');
+const { types } = require('../utils/proto');
+const { sendMsgAsync } = require('../utils/network');
+const { log, toNum } = require('../utils/utils');
 
 const DAILY_KEY = 'vip_daily_gift';
 const CHECK_COOLDOWN_MS = 10 * 60 * 1000;

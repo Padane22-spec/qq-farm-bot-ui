@@ -3,14 +3,14 @@
  */
 
 const protobuf = require('protobufjs');
-const { CONFIG, PlantPhase, PHASE_NAMES } = require('./config');
-const { types } = require('./proto');
-const { sendMsgAsync, getUserState, networkEvents, getWsErrorState } = require('./network');
-const { toLong, toNum, getServerTimeSec, toTimeSec, log, logWarn, sleep } = require('./utils');
+const { CONFIG, PlantPhase, PHASE_NAMES } = require('../config/config');
+const { types } = require('../utils/proto');
+const { sendMsgAsync, getUserState, networkEvents, getWsErrorState } = require('../utils/network');
+const { toLong, toNum, getServerTimeSec, toTimeSec, log, logWarn, sleep } = require('../utils/utils');
 const { recordOperation } = require('./stats');
-const { getPlantNameBySeedId, getPlantName, getPlantExp, formatGrowTime, getPlantGrowTime, getAllSeeds, getPlantById, getSeedImageBySeedId } = require('./gameConfig');
+const { getPlantNameBySeedId, getPlantName, getPlantExp, formatGrowTime, getPlantGrowTime, getAllSeeds, getPlantById, getSeedImageBySeedId } = require('../config/gameConfig');
 const { getPlantRankings } = require('./analytics');
-const { isAutomationOn, getPreferredSeed, getAutomation, getPlantingStrategy } = require('./store');
+const { isAutomationOn, getPreferredSeed, getAutomation, getPlantingStrategy } = require('../models/store');
 
 // ============ 内部状态 ============
 let isCheckingFarm = false;

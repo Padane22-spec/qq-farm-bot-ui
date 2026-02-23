@@ -4,7 +4,7 @@
 
 const protobuf = require('protobufjs');
 const Long = require('long');
-const { PHASE_NAMES } = require('./config');
+const { PHASE_NAMES } = require('../config/config');
 const { types, getRoot } = require('./proto');
 const { toNum } = require('./utils');
 

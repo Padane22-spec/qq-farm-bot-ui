@@ -7,13 +7,13 @@ const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
 const express = require('express');
-const { CONFIG } = require('./config');
-const { addOrUpdateAccount, deleteAccount } = require('./store');
-const store = require('./store'); // 引入 store 模块
-const { QRLoginSession, MiniProgramLoginSession } = require('./qrlogin');
-const { CookieUtils } = require('./qrutils');
-const { getResourcePath } = require('./runtime-paths');
-const { getLevelExpProgress } = require('./gameConfig');
+const { CONFIG } = require('../config/config');
+const { addOrUpdateAccount, deleteAccount } = require('../models/store');
+const store = require('../models/store'); // 引入 store 模块
+const { QRLoginSession, MiniProgramLoginSession } = require('../services/qrlogin');
+const { CookieUtils } = require('../utils/qrutils');
+const { getResourcePath } = require('../config/runtime-paths');
+const { getLevelExpProgress } = require('../config/gameConfig');
 
 const hashPassword = (pwd) => crypto.createHash('sha256').update(String(pwd || '')).digest('hex');
 
@@ -48,7 +48,7 @@ function startAdminServer(dataProvider) {
         next();
     });
 
-    const frontendDist = path.join(__dirname, '../frontend/dist');
+    const frontendDist = path.join(__dirname, '../../../frontend/dist');
     if (fs.existsSync(frontendDist)) {
         app.use(express.static(frontendDist));
     } else {
@@ -268,7 +268,7 @@ function startAdminServer(dataProvider) {
     app.get('/api/analytics', async (req, res) => {
         try {
             const sortBy = req.query.sort || 'exp';
-            const { getPlantRankings } = require('./analytics');
+            const { getPlantRankings } = require('../services/analytics');
             const data = getPlantRankings(sortBy);
             res.json({ ok: true, data });
         } catch (e) {

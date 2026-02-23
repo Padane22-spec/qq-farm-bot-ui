@@ -6,10 +6,10 @@
 const fs = require('fs');
 const path = require('path');
 const { fork } = require('child_process');
-const { startAdminServer } = require('./src/admin');
-const { sendPushooMessage } = require('./src/push');
-const { MiniProgramLoginSession } = require('./src/qrlogin');
-const store = require('./src/store');
+const { startAdminServer } = require('./src/controllers/admin');
+const { sendPushooMessage } = require('./src/services/push');
+const { MiniProgramLoginSession } = require('./src/services/qrlogin');
+const store = require('./src/models/store');
 const { getAccounts, addOrUpdateAccount, deleteAccount } = store;
 
 // ============ 状态管理 ============
@@ -24,7 +24,7 @@ const reloginWatchers = new Map(); // key: accountId:loginCode
 // 打包后 worker 由当前可执行文件以 --worker 模式启动
 const isWorkerProcess = process.env.FARM_WORKER === '1';
 if (isWorkerProcess) {
-    require('./src/worker');
+    require('./src/core/worker');
 }
 
 function nextConfigRevision() {
@@ -365,7 +365,7 @@ function startWorker(account) {
             env: { ...process.env, FARM_WORKER: '1', FARM_ACCOUNT_ID: String(account.id || '') },
         });
     } else {
-        const workerPath = path.join(__dirname, 'src', 'worker.js');
+        const workerPath = path.join(__dirname, 'src', 'core', 'worker.js');
         child = fork(workerPath, [], {
             stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
             env: { ...process.env, FARM_ACCOUNT_ID: String(account.id || '') },

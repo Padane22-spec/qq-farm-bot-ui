@@ -11,11 +11,11 @@
  */
 
 const fs = require('fs');
-const { types } = require('./proto');
-const { sendMsgAsync } = require('./network');
-const { toLong, log, logWarn, sleep } = require('./utils');
-const { CONFIG } = require('./config');
-const { getShareFilePath } = require('./runtime-paths');
+const { types } = require('../utils/proto');
+const { sendMsgAsync } = require('../utils/network');
+const { toLong, log, logWarn, sleep } = require('../utils/utils');
+const { CONFIG } = require('../config/config');
+const { getShareFilePath } = require('../config/runtime-paths');
 
 /**
  * 解析分享链接，提取 uid 和 openid

@@ -3,9 +3,9 @@
  * 当前实现：自动购买有机化肥（item_id=1012）
  */
 
-const { types } = require('./proto');
-const { sendMsgAsync, getUserState } = require('./network');
-const { toNum, log, sleep } = require('./utils');
+const { types } = require('../utils/proto');
+const { sendMsgAsync, getUserState } = require('../utils/network');
+const { toNum, log, sleep } = require('../utils/utils');
 
 const ORGANIC_FERTILIZER_MALL_GOODS_ID = 1002;
 const BUY_COOLDOWN_MS = 10 * 60 * 1000;

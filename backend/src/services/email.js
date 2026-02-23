@@ -2,9 +2,9 @@
  * 邮箱系统 - 自动领取邮箱奖励
  */
 
-const { types } = require('./proto');
-const { sendMsgAsync } = require('./network');
-const { log, toNum } = require('./utils');
+const { types } = require('../utils/proto');
+const { sendMsgAsync } = require('../utils/network');
+const { log, toNum } = require('../utils/utils');
 
 const DAILY_KEY = 'email_rewards';
 let doneDateKey = '';
